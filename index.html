@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="container">
+    <hgroup>
+        <h1>Market Comparison</h1>
+        <h2>95661 (Roseville) vs 90045 (Westchester)</h2>
+    </hgroup>
+
+    <article>
+        <canvas id="houseChart"></canvas>
+    </article>
+
+    <script>
+        const ctx = document.getElementById('houseChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar'], // These will come from your Sheet
+                datasets: [
+                    {
+                        label: 'Roseville (95661)',
+                        data: [720000, 735000, 745000],
+                        borderColor: '#36A2EB', // Blue
+                        fill: false
+                    },
+                    {
+                        label: 'Westchester (90045)',
+                        data: [1650000, 1600000, 1570000],
+                        borderColor: '#FF9F40', // Orange
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    // This adds your $1.2M - $1.4M buying zone as a reference
+                    annotation: {
+                        annotations: {
+                            box1: {
+                                type: 'box',
+                                yMin: 1200000,
+                                yMax: 1400000,
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
