@@ -1,0 +1,20 @@
+name: Home Price Scraper
+on:
+  schedule:
+    - cron: '0 4 */2 * *' # Runs at 4 AM UTC every 2 days (Perfectly Free)
+  workflow_dispatch:      # Allows you to click "Run" manually
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with: {python-version: '3.9'}
+      - name: Install dependencies
+        run: pip install requests gspread oauth2client
+      - name: Run Scraper
+        env:
+          RENTCAST_API_KEY: ${{ secrets.RENTCAST_API_KEY }}
+          GOOGLE_SHEETS_JSON: ${{ secrets.GOOGLE_SHEETS_JSON }}
+        run: python tracker.py
