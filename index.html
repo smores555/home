@@ -3,64 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Property Tracker | Modern Oak Edition</title>
+    <title>Property Tracker | Dark Walnut Edition</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     
     <style>
         :root {
-            --primary: #5d4037; /* Deep Walnut */
-            --wood-grain: #d7ccc8; 
-            --target-green: #2e7d32;
+            --walnut-dark: #3e2723;
+            --walnut-grain: #5d4037;
+            --slat-shadow: #2c1a16;
+            --bg-white: #fcfcfc;
         }
 
         body {
-            background-color: #f8f9fa; /* Clean gallery white */
-            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); /* Subtle grain */
+            background-color: var(--bg-white);
+            /* Darker, more visible wood texture */
+            background-image: url('https://www.transparenttextures.com/patterns/dark-wood.png');
+            font-family: 'Inter', -apple-system, sans-serif;
         }
 
-        /* Modern Wood Accent Header */
+        /* Deep Walnut Header with Slat Texture */
         .wood-header {
-            background: #fff;
-            border-top: 12px solid #8d6e63; /* Solid Walnut bar */
-            border-bottom: 1px solid #e0e0e0;
-            padding: 2rem 0;
+            background: var(--walnut-dark);
+            background-image: repeating-linear-gradient(90deg, 
+                transparent, 
+                transparent 15px, 
+                rgba(0,0,0,0.2) 15px, 
+                rgba(0,0,0,0.2) 17px); /* Vertical Slat Effect */
+            color: #fff;
+            padding: 3rem 0;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-bottom: 4px solid #2c1a16;
         }
+
+        .wood-header h1 { color: #fdf5e6; margin-bottom: 0.5rem; }
+        .wood-header p { color: #d7ccc8; opacity: 0.9; }
 
         /* Modern Card Styling */
         article {
             background: #ffffff !important;
-            border: none !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
-            transition: transform 0.2s ease;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 4px !important; /* Sharper, modern edges */
+            box-shadow: 0 12px 24px rgba(0,0,0,0.07) !important;
+            padding: 1.5rem;
         }
 
-        article:hover { transform: translateY(-5px); }
-
-        /* Wood Slat Accent for Cards */
+        /* Dark Slat Accent on top of cards */
         .card-accent {
-            height: 8px;
-            background: repeating-linear-gradient(90deg, #a1887f, #a1887f 10px, #8d6e63 10px, #8d6e63 12px);
-            border-radius: 12px 12px 0 0;
+            height: 12px;
+            background: var(--walnut-dark);
+            margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+            background-image: repeating-linear-gradient(90deg, 
+                var(--walnut-dark), 
+                var(--walnut-dark) 8px, 
+                var(--slat-shadow) 8px, 
+                var(--slat-shadow) 10px);
         }
 
         .finance-box {
-            background: #fdfaf8;
+            background: #f9f7f6;
             border: 1px solid #efebe9;
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
+            border-radius: 4px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-left: 5px solid var(--walnut-dark);
         }
 
-        .redfin-btn { background-color: #A02021; border: none; color: white; }
+        h2 { color: var(--walnut-dark); font-weight: 800; margin: 0.5rem 0; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.2px; color: #8d6e63; }
+        .stat-value { color: #3e2723; font-weight: 700; font-size: 1.2rem; }
+        
+        .redfin-btn { background-color: #A02021; border: none; font-weight: 600; width: 100%; }
         .redfin-btn:hover { background-color: #7d1819; }
 
-        h2 { color: #3e2723; font-weight: 800; }
-        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #a1887f; }
-        
-        .chart-container { height: 500px; background: white; padding: 20px; border-radius: 12px; }
+        .chart-container { 
+            height: 450px; 
+            padding: 10px; 
+            border-top: 1px solid #eee;
+        }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -71,8 +91,8 @@
     <header class="wood-header">
         <div class="container">
             <hgroup>
-                <h1>Property Dashboard</h1>
-                <p>95661 & 90045 Market Analysis</p>
+                <h1>Property Analysis Dashboard</h1>
+                <p>95661 Roseville & 90045 Westchester Monitoring</p>
             </hgroup>
         </div>
     </header>
@@ -81,52 +101,92 @@
         <div class="grid">
             <article>
                 <div class="card-accent"></div>
-                <header>Roseville, CA</header>
+                <header><span class="stat-label">Market A</span><br><strong>Roseville, CA</strong></header>
                 <h2 id="price1">$---,---</h2>
                 <div class="finance-box">
-                    <div class="stat-label">20% Down</div>
+                    <div class="stat-label">20% Down Payment</div>
                     <div id="down1" class="stat-value">--</div>
-                    <hr>
-                    <div class="stat-label">Est. Mortgage</div>
+                    <div style="margin-top:10px;" class="stat-label">Monthly Estimate</div>
                     <div id="mo1" class="stat-value">--</div>
                 </div>
-                <footer>
-                    <a href="https://www.redfin.com/zipcode/95661/filter/sort=lo-days" target="_blank" role="button" class="outline">Listings</a>
-                </footer>
+                <a href="https://www.redfin.com/zipcode/95661/filter/sort=lo-days" target="_blank" role="button" class="outline">View Redfin</a>
             </article>
 
             <article>
                 <div class="card-accent"></div>
-                <header>Westchester, LA ($2M+)</header>
+                <header><span class="stat-label">Market B</span><br><strong>Westchester $2M+</strong></header>
                 <h2 id="price2">$---,---</h2>
                 <div class="finance-box">
-                    <div class="stat-label">20% Down</div>
+                    <div class="stat-label">20% Down Payment</div>
                     <div id="down2" class="stat-value">--</div>
-                    <hr>
-                    <div class="stat-label">Est. Mortgage</div>
+                    <div style="margin-top:10px;" class="stat-label">Monthly Estimate</div>
                     <div id="mo2" class="stat-value">--</div>
                 </div>
-                <footer>
-                    <a href="https://www.redfin.com/zipcode/90045/filter/min-price=2M,sort=lo-days" target="_blank" role="button" class="redfin-btn">Luxury View</a>
-                </footer>
+                <a href="https://www.redfin.com/zipcode/90045/filter/min-price=2M,sort=lo-days" target="_blank" role="button" class="redfin-btn">View Luxury</a>
             </article>
         </div>
 
-        <article>
-            <header>Price Velocity (18-Month View)</header>
+        <article style="margin-top: 2rem;">
+            <header><strong>Market Price Velocity</strong></header>
             <div class="chart-container">
                 <canvas id="houseChart"></canvas>
             </div>
+            <footer>
+                <small>Target Buy Zone: $1.2M - $1.4M (Shaded)</small>
+            </footer>
         </article>
     </main>
 
     <script>
-        // ... (Keep the previous Javascript logic here to fetch the CSVs and update UI)
-        // Ensure you use the CSV URLs you provided:
+        // Use the URLs you provided
         const csv1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=0&single=true&output=csv';
         const csv2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=1133081420&single=true&output=csv';
-        
-        // (Insert previous parse(), updateUI(), and calcMortgage() functions here)
+        const RATE = 0.059;
+
+        function calcMortgage(p) {
+            const prin = p * 0.8, mR = RATE / 12, n = 360;
+            return prin * (mR * Math.pow(1+mR, n)) / (Math.pow(1+mR, n) - 1);
+        }
+
+        async function parse(url) {
+            const r = await fetch(url);
+            const t = await r.text();
+            return t.trim().split('\n').slice(1).map(row => {
+                const [d, p] = row.split(',');
+                return { x: new Date(d), y: parseFloat(p) };
+            }).filter(i => !isNaN(i.y));
+        }
+
+        function updateUI(id, data, downId, moId) {
+            if (!data.length) return;
+            const latest = data[data.length - 1].y;
+            document.getElementById(id).innerText = `$${latest.toLocaleString()}`;
+            document.getElementById(downId).innerText = `$${(latest * 0.2).toLocaleString()}`;
+            document.getElementById(moId).innerText = `$${Math.round(calcMortgage(latest)).toLocaleString()}/mo`;
+        }
+
+        async function init() {
+            const d1 = await parse(csv1);
+            const d2 = await parse(csv2);
+            updateUI('price1', d1, 'down1', 'mo1');
+            updateUI('price2', d2, 'down2', 'mo2');
+
+            new Chart(document.getElementById('houseChart'), {
+                type: 'line',
+                data: {
+                    datasets: [
+                        { label: 'Roseville', data: d1, borderColor: '#8d6e63', backgroundColor: 'rgba(141, 110, 99, 0.1)', fill: true },
+                        { label: 'Westchester', data: d2, borderColor: '#3e2723', backgroundColor: 'rgba(62, 39, 35, 0.1)', fill: true }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { type: 'time' }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
+                }
+            });
+        }
+        init();
     </script>
 </body>
 </html>
