@@ -1,100 +1,137 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Price Tracker</title>
+    <title>Corbin's Pilot Property Tracker</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        :root { --redfin-red: #A02021; --target-green: #44d844; }
+        .redfin-btn { background-color: var(--redfin-red); border: none; }
+        .finance-box { background: #1a212a; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--target-green); }
+        .stat-label { font-size: 0.8rem; color: #8ba2ad; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-value { font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; }
+        .chart-container { height: 60vh; width: 100%; margin-top: 20px; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
 </head>
 <body class="container">
+
     <nav>
-        <ul><li><strong>🏡 Corbin's Home Tracker</strong></li></ul>
-        <ul><li>Lincoln (95661) vs Westchester (90045)</li></ul>
+        <ul><li><strong>🏡 Home Tracker & Calculator</strong></li></ul>
+        <ul><li>Est. Rate: 5.9%</li></ul>
     </nav>
 
     <main>
         <div class="grid">
             <article>
                 <header>Roseville (95661)</header>
-                <h2 id="price1" style="color: #36A2EB;">Loading...</h2>
+                <h2 id="price1">$---,---</h2>
+                <div class="finance-box">
+                    <div class="stat-label">20% Down Payment</div>
+                    <div id="down1" class="stat-value">$0</div>
+                    <div class="stat-label">Est. Monthly (P&I)</div>
+                    <div id="mo1" class="stat-value">$0</div>
+                </div>
+                <a href="https://www.redfin.com/zipcode/95661/filter/sort=lo-days" target="_blank" role="button" class="outline">View New Listings</a>
             </article>
+
             <article>
-                <header>Westchester (90045)</header>
-                <h2 id="price2" style="color: #FF9F40;">Loading...</h2>
+                <header>Westchester (90045) $2M+</header>
+                <h2 id="price2">$---,---</h2>
+                <div class="finance-box">
+                    <div class="stat-label">20% Down Payment</div>
+                    <div id="down2" class="stat-value">$0</div>
+                    <div class="stat-label">Est. Monthly (P&I)</div>
+                    <div id="mo2" class="stat-value">$0</div>
+                </div>
+                <a href="https://www.redfin.com/zipcode/90045/filter/min-price=2M,sort=lo-days" target="_blank" role="button" class="redfin-btn">View Luxury $2M+</a>
             </article>
         </div>
 
         <article>
-            <canvas id="priceChart" style="width:100%; height:450px;"></canvas>
+            <div class="grid">
+                <div><input type="date" id="start" onchange="updateChart()"></div>
+                <div><input type="date" id="end" onchange="updateChart()"></div>
+                <div><button class="secondary" onclick="resetZoom()">Reset Zoom</button></div>
+            </div>
+            <div class="chart-container"><canvas id="houseChart"></canvas></div>
         </article>
     </main>
 
     <script>
-        // YOUR DIRECT CSV LINKS
-        const csvRoseville = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=0&single=true&output=csv';
-        const csvWestchester = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=1133081420&single=true&output=csv';
+        const csv1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=0&single=true&output=csv';
+        const csv2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=1133081420&single=true&output=csv';
+        const CURRENT_RATE = 0.059; // 5.9% Feb 2026 Average
 
-        async function parseCSV(url) {
-            const resp = await fetch(url);
-            const text = await resp.text();
-            // Split rows, skip the header row [Date, Price]
-            const rows = text.trim().split('\n').slice(1);
-            return rows.map(row => {
-                const [date, price] = row.split(',');
-                return { x: date.trim(), y: parseFloat(price) };
-            }).filter(d => !isNaN(d.y));
+        let chart;
+        let data1 = [], data2 = [];
+
+        function calcMortgage(price) {
+            const principal = price * 0.8; // 20% down
+            const monthlyRate = CURRENT_RATE / 12;
+            const n = 360; // 30 years
+            const payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+            return payment;
         }
 
-        async function render() {
-            const dataRose = await parseCSV(csvRoseville);
-            const dataWest = await parseCSV(csvWestchester);
+        async function parse(url) {
+            const r = await fetch(url);
+            const t = await r.text();
+            return t.trim().split('\n').slice(1).map(row => {
+                const [d, p] = row.split(',');
+                return { x: new Date(d), y: parseFloat(p) };
+            }).filter(i => !isNaN(i.y));
+        }
 
-            // Update Header Values with latest price entries
-            if (dataRose.length > 0) document.getElementById('price1').innerText = `$${dataRose[dataRose.length - 1].y.toLocaleString()}`;
-            if (dataWest.length > 0) document.getElementById('price2').innerText = `$${dataWest[dataWest.length - 1].y.toLocaleString()}`;
+        function updateUI(id, data, downId, moId) {
+            if (!data.length) return;
+            const latest = data[data.length - 1].y;
+            document.getElementById(id).innerText = `$${latest.toLocaleString()}`;
+            document.getElementById(downId).innerText = `$${(latest * 0.2).toLocaleString()}`;
+            document.getElementById(moId).innerText = `$${calcMortgage(latest).toLocaleString(undefined, {maximumFractionDigits:0})}/mo`;
+        }
 
-            const ctx = document.getElementById('priceChart').getContext('2d');
-            new Chart(ctx, {
+        async function init() {
+            data1 = await parse(csv1);
+            data2 = await parse(csv2);
+            updateUI('price1', data1, 'down1', 'mo1');
+            updateUI('price2', data2, 'down2', 'mo2');
+
+            const ctx = document.getElementById('houseChart').getContext('2d');
+            chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     datasets: [
-                        {
-                            label: 'Roseville (95661)',
-                            data: dataRose,
-                            borderColor: '#36A2EB',
-                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                            borderWidth: 3,
-                            fill: true
-                        },
-                        {
-                            label: 'Westchester (90045)',
-                            data: dataWest,
-                            borderColor: '#FF9F40',
-                            backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                            borderWidth: 3,
-                            fill: true
-                        }
+                        { label: 'Roseville', data: data1, borderColor: '#36A2EB' },
+                        { label: 'Westchester $2M+', data: data2, borderColor: '#FF9F40' }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        x: { type: 'category', title: { display: true, text: 'Date' } },
-                        y: { 
-                            title: { display: true, text: 'Price ($)' },
-                            ticks: { callback: (value) => '$' + value.toLocaleString() }
+                    scales: { x: { type: 'time' }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } },
+                    plugins: { 
+                        zoom: { zoom: { wheel: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } },
+                        // Draw Buy Zone (1.2M - 1.4M)
+                        beforeDraw: (c) => {
+                            const {ctx, chartArea, scales: {y}} = c;
+                            ctx.fillStyle = 'rgba(68, 216, 68, 0.08)';
+                            ctx.fillRect(chartArea.left, y.getPixelForValue(1400000), chartArea.width, y.getPixelForValue(1200000) - y.getPixelForValue(1400000));
                         }
-                    },
-                    plugins: {
-                        legend: { position: 'top' }
                     }
                 }
             });
         }
-
-        render();
+        function resetZoom() { chart.resetZoom(); }
+        function updateChart() {
+            chart.options.scales.x.min = document.getElementById('start').value || undefined;
+            chart.options.scales.x.max = document.getElementById('end').value || undefined;
+            chart.update();
+        }
+        init();
     </script>
 </body>
 </html>
