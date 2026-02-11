@@ -1,56 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Price Tracker</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="container">
-    <hgroup>
-        <h1>Market Comparison</h1>
-        <h2>95661 (Roseville) vs 90045 (Westchester)</h2>
-    </hgroup>
+    <nav>
+        <ul><li><strong>🏡 Corbin's Home Tracker</strong></li></ul>
+        <ul><li>Lincoln (95661) vs Westchester (90045)</li></ul>
+    </nav>
 
-    <article>
-        <canvas id="houseChart"></canvas>
-    </article>
+    <main>
+        <div class="grid">
+            <article>
+                <header>Roseville (95661)</header>
+                <h2 id="price1" style="color: #36A2EB;">Loading...</h2>
+            </article>
+            <article>
+                <header>Westchester (90045)</header>
+                <h2 id="price2" style="color: #FF9F40;">Loading...</h2>
+            </article>
+        </div>
+
+        <article>
+            <canvas id="priceChart" style="width:100%; height:450px;"></canvas>
+        </article>
+    </main>
 
     <script>
-        const ctx = document.getElementById('houseChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar'], // These will come from your Sheet
-                datasets: [
-                    {
-                        label: 'Roseville (95661)',
-                        data: [720000, 735000, 745000],
-                        borderColor: '#36A2EB', // Blue
-                        fill: false
-                    },
-                    {
-                        label: 'Westchester (90045)',
-                        data: [1650000, 1600000, 1570000],
-                        borderColor: '#FF9F40', // Orange
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                plugins: {
-                    // This adds your $1.2M - $1.4M buying zone as a reference
-                    annotation: {
-                        annotations: {
-                            box1: {
-                                type: 'box',
-                                yMin: 1200000,
-                                yMax: 1400000,
-                                backgroundColor: 'rgba(75, 192, 192, 0.1)'
-                            }
+        // YOUR DIRECT CSV LINKS
+        const csvRoseville = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=0&single=true&output=csv';
+        const csvWestchester = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrQGCdj2JPKoy5VRkBbECutZj3DMHGH-WhwH1MOxysR29ltTzOCjm37RYZ-7uPtdqVoSHV1xGJaxi/pub?gid=1133081420&single=true&output=csv';
+
+        async function parseCSV(url) {
+            const resp = await fetch(url);
+            const text = await resp.text();
+            // Split rows, skip the header row [Date, Price]
+            const rows = text.trim().split('\n').slice(1);
+            return rows.map(row => {
+                const [date, price] = row.split(',');
+                return { x: date.trim(), y: parseFloat(price) };
+            }).filter(d => !isNaN(d.y));
+        }
+
+        async function render() {
+            const dataRose = await parseCSV(csvRoseville);
+            const dataWest = await parseCSV(csvWestchester);
+
+            // Update Header Values with latest price entries
+            if (dataRose.length > 0) document.getElementById('price1').innerText = `$${dataRose[dataRose.length - 1].y.toLocaleString()}`;
+            if (dataWest.length > 0) document.getElementById('price2').innerText = `$${dataWest[dataWest.length - 1].y.toLocaleString()}`;
+
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Roseville (95661)',
+                            data: dataRose,
+                            borderColor: '#36A2EB',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        },
+                        {
+                            label: 'Westchester (90045)',
+                            data: dataWest,
+                            borderColor: '#FF9F40',
+                            backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                            borderWidth: 3,
+                            fill: true
                         }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'category', title: { display: true, text: 'Date' } },
+                        y: { 
+                            title: { display: true, text: 'Price ($)' },
+                            ticks: { callback: (value) => '$' + value.toLocaleString() }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
                     }
                 }
-            }
-        });
+            });
+        }
+
+        render();
     </script>
 </body>
 </html>
